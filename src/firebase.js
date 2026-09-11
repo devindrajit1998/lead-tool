@@ -1,28 +1,21 @@
-// Firebase Configuration with dynamic fallback & local configuration support
+// Firebase Configuration for LeadFlow
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Default config check from env
-const getEnvConfig = () => {
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  if (apiKey && apiKey !== 'YOUR_API_KEY') {
-    return {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    };
-  }
-  return null;
+// Default Firebase Project Configuration
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBozCbg7T0uzGHWjtK75728CZr2sudXMvc",
+  authDomain: "lead-hub-fee56.firebaseapp.com",
+  projectId: "lead-hub-fee56",
+  storageBucket: "lead-hub-fee56.firebasestorage.app",
+  messagingSenderId: "282439274538",
+  appId: "1:282439274538:web:23a0e6578c6983b23a3353",
+  measurementId: "G-3S63J03KHE"
 };
 
-// Check if user entered config in UI settings
+// Check if environment variables or local overrides are present
 export const getActiveFirebaseConfig = () => {
-  const envConfig = getEnvConfig();
-  if (envConfig && envConfig.projectId) return envConfig;
-
+  // 1. Check in-browser custom configuration
   try {
     const stored = localStorage.getItem('leadflow_firebase_config');
     if (stored) {
@@ -34,7 +27,23 @@ export const getActiveFirebaseConfig = () => {
   } catch (e) {
     console.error('Error reading stored Firebase config', e);
   }
-  return null;
+
+  // 2. Check environment variables
+  const envApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  if (envApiKey && envApiKey.length > 5) {
+    return {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_FIREBASE_CONFIG.authDomain,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_CONFIG.projectId,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_FIREBASE_CONFIG.storageBucket,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || DEFAULT_FIREBASE_CONFIG.measurementId,
+    };
+  }
+
+  // 3. Fallback to default project configuration
+  return DEFAULT_FIREBASE_CONFIG;
 };
 
 export const saveFirebaseConfig = (config) => {
@@ -59,9 +68,9 @@ if (activeConfig && activeConfig.projectId) {
   try {
     firebaseApp = getApps().length === 0 ? initializeApp(activeConfig) : getApp();
     db = getFirestore(firebaseApp);
-    console.log('✅ Firebase initialized successfully with project:', activeConfig.projectId);
+    console.log('✅ Firebase Cloud Firestore connected to project:', activeConfig.projectId);
   } catch (err) {
-    console.warn('⚠️ Could not initialize Firebase, falling back to Local Storage mode:', err);
+    console.warn('⚠️ Could not initialize Firebase Cloud Firestore, using Local Storage mode:', err);
     db = null;
   }
 }

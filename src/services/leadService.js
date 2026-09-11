@@ -16,18 +16,26 @@ import { cleanPhoneNumber } from '../utils/formatters';
 
 const LOCAL_STORAGE_KEY = 'leadflow_leads_data';
 
-// Initialize local storage if empty
+// Get leads from local storage with static data purge
 export const getLocalLeads = () => {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_LEADS));
-      return INITIAL_LEADS;
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // Purge any previously loaded static mock leads (lead-1 through lead-7)
+    const filtered = Array.isArray(parsed) 
+      ? parsed.filter((l) => !['lead-1', 'lead-2', 'lead-3', 'lead-4', 'lead-5', 'lead-6', 'lead-7'].includes(l.id))
+      : [];
+    if (filtered.length !== parsed.length) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+    }
+    return filtered;
   } catch (e) {
     console.error('Error reading localStorage leads', e);
-    return INITIAL_LEADS;
+    return [];
   }
 };
 
